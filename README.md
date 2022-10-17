@@ -20,3 +20,7 @@ In seperate terminals run each of the following commands
 3. `ros2 run joy joy_node`
 4. `ros2 run boat_control joyctl`
 5. You can now use any of the joysticks supported here https://index.ros.org/p/joy/ and you will be able to move the left and right thrusters
+
+TODO:
+1. Create a launch file for the joy demo
+2. Waypoint navigation with ground truth coordinates
