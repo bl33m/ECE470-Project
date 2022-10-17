@@ -1,5 +1,16 @@
 # ECE470-Project
 
+## Installing the simulator
+
+In order to install the simulator follow the instructions on the mbzirc git repo.
+https://github.com/osrf/mbzirc
+
+Officially the simulator supports ubuntu 20.04 and ROS2 galactic, however, Blerim was able to get this to run on ROS2 humble, with ubuntu 22.04
+
+Installing this package:
+1. Simply clone this repo into your `~/workspace/src`, under the name boat_control.
+2. Run `colcon build --packages select boat_control --merge-install`
+
 To run the simulator:
 
 In seperate terminals run each of the following commands
