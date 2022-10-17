@@ -15,25 +15,31 @@ from nav_msgs.msg import Odometry
 
 class JoyCtl(Node):
     def __init__(self):
+        super().__init__('minimal_subscriber')
+   
         self.left_thrust = 0
         self.right_thrust = 0
 
-        self.joystick_sub = self.create_subscription(Joy, 'joy', self.read_joy, 10)
-
-        self.left_thrust_pub = self.create_publisher(Float64, 'usv/left/thruster/cmd_thrust', 10)
-        self.right_thrust_pub = self.create_publisher(Float64, 'usv/right/thruster/cmd_thrust', 10)
+        self.joystick_sub = self.create_subscription(Joy, '/joy', self.read_joy, 10)
+                            
+        self.left_thrust_pub = self.create_publisher(Float64, '/usv/left/thrust/cmd_thrust', 10)
+        self.right_thrust_pub = self.create_publisher(Float64, '/usv/right/thrust/cmd_thrust', 10)
         self.timer = self.create_timer(0.1, self.publish_thrust)
     
-    def read_joy(msg):
+    def read_joy(self, msg):
         self.left_thrust = msg.axes[1]*100
         self.right_thrust = msg.axes[4]*100
 
     def publish_thrust(self):
-        self.left_thrust_pub.publish(self.left_thrust)
-        self.right_thrust_pub.publish(self.right_thrust)
+        right_thrust = Float64()
+        left_thrust = Float64()
+        right_thrust.data = self.right_thrust
+        left_thrust.data = self.left_thrust
+        self.left_thrust_pub.publish(left_thrust)
+        self.right_thrust_pub.publish(right_thrust)
 
-def main():
-    rclpy.init()
+def main(args=None):
+    rclpy.init(args=args)
 
     joyctl = JoyCtl()
 
