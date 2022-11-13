@@ -9,7 +9,7 @@ Officially the simulator supports ubuntu 20.04 and ROS2 galactic, however, Bleri
 
 Installing this package:
 1. Simply clone this repo into your `~/workspace/src`, under the name boat_control.
-2. Build the boat control package with `colcon build --packages select boat_control --merge-install`
+2. Build the boat control package with `colcon build --packages-select boat_control --merge-install`
 
 To run the simulator joystick demo:
 
