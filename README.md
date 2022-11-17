@@ -26,7 +26,7 @@ TODO:
 1. Create a launch file for the joy demo
 2. Waypoint navigation with ground truth coordinates
 
-Inverse Kinematic Equations (y,z) -> (θ<sub>0</sub>,θ1):
+Inverse Kinematic Equations (y,z) -> (θ<sub>0</sub>,θ<sub>1</sub>):
   Note: $L = 0.75$, $H = \sqrt(y^2 + z^2)$
-1. $θ0 = sin^-1(z/H) + cos^-1(H/(2L))$
-2. $θ1 = pi/2 + sin^-1(z/H) - cos^-1(H/(2L))$
+1. $θ<sub>0</sub> = sin^-1(z/H) + cos^-1(H/(2L))$
+2. $θ<sub>1</sub> = pi/2 + sin^-1(z/H) - cos^-1(H/(2L))$
