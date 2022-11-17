@@ -25,3 +25,8 @@ In seperate terminals run each of the following commands
 TODO:
 1. Create a launch file for the joy demo
 2. Waypoint navigation with ground truth coordinates
+
+Inverse Kinematic Equations (y,z) -> (theta0,theta1):
+  Note: L = 0.75, H = sqrt(y^2 + z^2)
+1. theta0 = asin2(z/H) + acos2(H/(2L))
+2. theta1 = pi/2 + asin2(z/H) - acos2(H/(2L))
