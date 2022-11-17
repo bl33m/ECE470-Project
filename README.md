@@ -16,8 +16,8 @@ To run the simulator joystick demo:
 In seperate terminals run each of the following commands
 
 0. run `source /opt/ros/galactic/setup.sh`. If you get a message regarding another ros version set up, run the previous command again.
-1. `ros2 launch mbzirc_ros competition_local.launch.py ign_args:="-v 4 -r simple_demo.sdf"`
-2. `ros2 launch mbzirc_ign spawn.launch.py name:=usv world:=simple_demo model:=usv x:=15 y:=0 z:=0.3 R:=0 P:=0 Y:=0 arm:=mbzirc_simple_arm gripper:=mbzirc_oberon7_gripper`
+1. `ros2 launch mbzirc_ros competition_local.launch.py ign_args:="-v 4 -r coast.sdf"`
+2. `ros2 launch mbzirc_ign spawn.launch.py name:=usv world:=coast model:=usv x:=-1462 y:=-16.5 z:=0.3 R:=0 P:=0 Y:=0  arm:=mbzirc_oberon7_arm gripper:=mbzirc_oberon7_gripper`
 3. `ros2 run joy joy_node`
 4. `ros2 run boat_control joyctl`
 5. You can now use any of the joysticks supported here https://index.ros.org/p/joy/ and you will be able to move the left and right thrusters
@@ -27,6 +27,6 @@ TODO:
 2. Waypoint navigation with ground truth coordinates
 
 Inverse Kinematic Equations (y,z) -> (θ<sub>0</sub>,θ<sub>1</sub>):
-  Note: $L = 0.75$, $H = \sqrt(y^2 + z^2)$
-1. $θ<sub>0</sub> = sin^-1(z/H) + cos^-1(H/(2L))$
-2. $θ<sub>1</sub> = pi/2 + sin^-1(z/H) - cos^-1(H/(2L))$
+\n  Note: $\L = 0.75$, $\H = sqrt(y^2 + z^2)$
+1. $\θ<sub>0</sub> = sin^-1(z/H) + cos^-1(H/(2L))$
+2. $\θ<sub>1</sub> = pi/2 + sin^-1(z/H) - cos^-1(H/(2L))$
