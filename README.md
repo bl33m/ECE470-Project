@@ -27,6 +27,8 @@ TODO:
 2. Waypoint navigation with ground truth coordinates
 
 Inverse Kinematic Equations (y,z) -> (θ<sub>0</sub>,θ<sub>1</sub>):
-\n  Note: L = $\0.75$, H = $\sqrt(y^2 + z^2)$
+
+[Note: L = 0.75, H = $\sqrt(y^2 + z^2)$]
+
 1. θ<sub>0</sub> = $\sin^-1(z/H) + cos^-1(H/(2L))$
 2. θ<sub>1</sub> = $\pi/2 + sin^-1(z/H) - cos^-1(H/(2L))$
