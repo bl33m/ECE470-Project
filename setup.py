@@ -20,7 +20,8 @@ setup(
  tests_require=['pytest'],
  entry_points={
      'console_scripts': [
-         'joyctl = boat_control.joystick:main'
+         'joyctl = boat_control.joystick:main',
+         'odom = boat_control.odometry:main'
      ],
    }
 )
