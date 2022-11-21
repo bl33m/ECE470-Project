@@ -27,7 +27,8 @@ class OdometryNode(Node):
     Accely = 0.0
     Accelz = 0.0
 
-
+    vx = 0.0
+    vy = 0.0
     x = 0.0 # x robot's position
     y = 0.0 # y robot's position
     theta = 0.0 # heading angle
@@ -46,13 +47,15 @@ class OdometryNode(Node):
         self.last_time = self.get_clock().now().nanoseconds/1e9
         
         self.odom_pub = self.create_publisher(Odometry, 'odom', 10) 
-        #self.timer = self.create_timer(0.1, self.timer_callback_odom) #It creates a timer to periodically publish the odometry.
+        self.timer = self.create_timer(0.1, self.timer_callback_odom) #It creates a timer to periodically publish the odometry.
         
         self.tf_broadcaster = TransformBroadcaster(self) # To broadcast the transformation between coordinate frames.
     
     def callback_Imu(self, msg):
         self.gyro_yaw = msg.angular_velocity.z
-        print(self.gyro_yaw)
+        self.Accelx = msg.linear_acceleration.x
+        self.Accely = msg.linear_acceleration.y
+        #print(self.gyro_yaw)
     
     def callback_left(self, msg):
         self.left_speed = msg.data
@@ -69,20 +72,28 @@ class OdometryNode(Node):
         self.current_time = self.get_clock().now().nanoseconds/1e9
         dt = self.current_time - self.last_time # DeltaT
         
-        vl = self.left_speed
-        vr = self.right_speed
-        
-        v = (vl+vr)/2 # ... Linear velocity of the robot
-        w = (vl-vr)/self.l_wheels # ... Angular velocity of the robot
-        self.x += v*np.cos(self.theta)*dt # ...Position
-        self.y += v*np.sin(self.theta)*dt # ...Position
+        #vl = self.left_speed/100.0
+        #vr = self.right_speed/100.0
+        if (np.abs(self.Accelx) < 0.2):
+            self.Accelx = 0.0
+        if (np.abs(self.Accely) < 0.13):
+            self.Accely = 0.0
+        self.vx += self.Accelx*dt
+        self.vy += self.Accely*dt
+
+        #v = (vl+vr)/2 # ... Linear velocity of the robot
+        #w = (vl-vr)/self.l_wheels # ... Angular velocity of the robot
+        #self.x += v*np.cos(self.theta)*dt # ...Position
+        #self.y += v*np.sin(self.theta)*dt # ...Position
+        self.x += self.vx*dt
+        self.y += self.vy*dt
         self.theta += self.gyro_yaw*dt # ...Heading angle
 
         position = [self.x, self.y, 0.0]
         quater = quaternion_from_euler(0.0, 0.0, self.theta)
         print("position: ", position)
         print("orientation: ", quater)
-        print("gyro_yaw ", self.gyro_yaw)
+        #print("gyro_yaw ", self.gyro_yaw)
 
 
         # We need to set an odometry message and publish the transformation between two coordinate frames
@@ -109,8 +120,8 @@ class OdometryNode(Node):
         odom.pose.pose.orientation.w = quater[3] # ...
 
         odom.child_frame_id = child_frame_id
-        odom.twist.twist.linear.x = v*np.cos(self.theta) # ...
-        odom.twist.twist.linear.y = v*np.sin(self.theta) # ...
+        odom.twist.twist.linear.x = self.vx # ...
+        odom.twist.twist.linear.y = self.vy # ...
         odom.twist.twist.linear.z = 0.0 # ...
         odom.twist.twist.angular.x = 0.0 # ...
         odom.twist.twist.angular.y = 0.0 # ...
