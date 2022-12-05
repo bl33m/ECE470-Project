@@ -1,4 +1,6 @@
 # ECE470-Project
+## Aquatic Illini
+Ocean pollution has become a huge problem for marine life and large part of that problem has become the amount of litter that is in our ocean. This is the motivation behind this robot. Our roboboat is able to pick up packages of litter from one set location and drop them off in another using a boom style arm, a suction gripper and rotating dual thrusters. 
 
 ## Installing the simulator
 
