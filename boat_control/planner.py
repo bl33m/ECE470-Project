@@ -51,7 +51,7 @@ class path_planner:
         self.x = 0.0 # (x,y) Robot's position
         self.y = 0.0
         self.xd = 15.0 # (xd, yd) is the desired goal
-        self.yd = 15.0
+        self.yd = 0.0
         self.key_points = deque()
         self.turn_rad = 5
         self.time = np.arange(0,40,0.1)
@@ -62,9 +62,10 @@ class path_planner:
         self.theta = 0 # Heading angle
         self.results = [[],[],[],[],[],[],[]] 
         self.turning = False
-        self.plan_path()
-        self.xd = self.key_points.popleft()[0]
-        self.yd = self.key_points.popleft()[1]
+        #self.plan_path()
+        #self.xd = self.key_points.popleft()[0]
+        #self.yd = self.key_points.popleft()[1]
+        """
         for t in self.time: # control loop
             self.desired_trajectory(t)
             self.update_robot_state()
@@ -72,6 +73,7 @@ class path_planner:
             self.w, self.v = self.compute_control(angle_error, distance_error)
             print(self.x, self.y)
             self.save_results()
+        """
 
     def plan_path(self):
         circle_x = self.xd - self.turn_rad

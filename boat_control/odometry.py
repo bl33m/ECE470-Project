@@ -2,14 +2,20 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
+from simple_pid import PID
+import math
+from scipy.spatial.transform import Rotation as R # >>pip3 install scipy
+import time
 #from rclpy.clock import Clock
 
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster
 from sensor_msgs.msg import Joy, Imu
 
-from std_msgs.msg import String, Float64
+from std_msgs.msg import String, Float64, Bool
 from nav_msgs.msg import Odometry
+
+from boat_control.invk import ik_boat
 
 from boat_control.utils import quaternion_from_euler
 
@@ -22,6 +28,16 @@ class OdometryNode(Node):
     
     left_speed = 0.0
     right_speed = 0.0
+
+    # Angle of the thursters
+    left_angle = 0.0
+    right_angle = 0.0
+
+    joint_0 = 0.0
+    joint_1 = 0.0
+    joint_2 = 0.0
+
+    suction = 0
 
     Accelx = 0.0
     Accely = 0.0
@@ -42,7 +58,25 @@ class OdometryNode(Node):
        
         self.subscription_Imu = self.create_subscription(Imu, '/usv/imu/data', self.callback_Imu, 10)
         self.subscription_left_thrust = self.create_subscription(Float64,  '/usv/left/thrust/cmd_thrust', self.callback_left, 10)
+        self.subscription_left_angle = self.create_subscription(Float64,  '/usv/left/thrust/joint/cmd_pos', self.callback_left, 10)
         self.subscription_right_thrust = self.create_subscription(Float64, '/usv/right/thrust/cmd_thrust', self.callback_right, 10)
+        self.subscription_right_angle = self.create_subscription(Float64, '/usv/right/thrust/joint/cmd_pos', self.callback_right, 10)
+
+        self.subscription_joint_0 = self.create_subscription(Float64, '/usv/arm/joint/joint_0/cmd_pos', self.callback_joint_0, 10)
+        self.subscription_joint_1 = self.create_subscription(Float64, '/usv/arm/joint/joint_1/cmd_pos', self.callback_joint_1, 10)
+        self.subscription_joint_2 = self.create_subscription(Float64, '/usv/arm/joint/joint_2/cmd_pos', self.callback_joint_2, 10)
+
+        self.subscription_suction = self.create_subscription(Bool, '/usv/arm/gripper/suction_on', self.callback_suction, 10)
+
+        self.pub_joint_0 = self.create_publisher(Float64, '/usv/arm/joint/joint_0/cmd_pos', 10)
+        self.pub_joint_1 = self.create_publisher(Float64, '/usv/arm/joint/joint_1/cmd_pos', 10)
+        self.pub_suction = self.create_publisher(Bool, '/usv/arm/gripper/suction_on', 10)
+
+        self.pub_left_angle = self.create_publisher(Float64,  '/usv/left/thrust/joint/cmd_pos', 10)
+        self.pub_right_angle = self.create_publisher(Float64,  '/usv/left/thrust/joint/cmd_pos', 10)
+        
+        self.left_thrust_pub = self.create_publisher(Float64, '/usv/left/thrust/cmd_thrust', 10)
+        self.right_thrust_pub = self.create_publisher(Float64, '/usv/right/thrust/cmd_thrust', 10)
 
         self.last_time = self.get_clock().now().nanoseconds/1e9
         
@@ -54,18 +88,73 @@ class OdometryNode(Node):
     def callback_Imu(self, msg):
         self.gyro_yaw = msg.angular_velocity.z
         self.Accelx = msg.linear_acceleration.x
-        self.Accely = msg.linear_acceleration.y
+        self.Accely = msg.linear_acceleration.y + 0.05
         #print(self.gyro_yaw)
     
     def callback_left(self, msg):
         self.left_speed = msg.data
+    def callback_left_angle(self, msg):
+        self.left_angle = msg.data
     def callback_right(self, msg):
         self.right_speed = msg.data
+    def callback_right(self, msg):
+        self.right_speed = msg.data
+
+    def callback_joint_0(self, msg):
+        self.joint_0 = msg.data
+    def callback_joint_1(self, msg):
+        self.joint_1 = msg.data
+    def callback_joint_2(self, msg):
+        self.joint_2 = msg.data
+    def callback_suction(self, msg):
+        self.suction = msg.data
+
     #def callback_Gp(self, msg):
     #    self.gyro_pitch = msg.data
     #def callback_Gr(self, msg):
     #    self.gyro_roll = msg.data
     
+    def change_left_angle(self, angle):
+        theta = Float64()
+        theta.data = angle
+        self.pub_left_angle.publish(theta)
+        print("Sending left angle goal")
+        while((angle-self.left_angle) > 0.01):
+            time.sleep(1/20)
+        return
+   
+    def move_arm(self, thetas):
+        theta0 = Float64()
+        theta0.data = thetas[0]
+        theta1 = Float64()
+        theta1.data = thetas[1]
+        self.pub_joint_0.publish(theta0)
+        self.pub_joint_1.publish(theta1)
+        print("Sending arm angle goal")
+        while((abs(thetas[0]-self.joint_0) > 0.01) and (abs(thetas[1]-self.joint_1) > 0.01)):
+            time.sleep(1/20)
+        return
+
+    def change_left_thrust(self, speed):
+        speed = Float64()
+        speed.data = speed
+        self.left_thrust_pub.publish(speed)
+    
+    def change_both_thrust(self, speed):
+        speed = Float64()
+        speed.data = speed
+        self.left_thrust_pub.publish(speed)
+        self.right_thrust_pub.publish(speed)
+
+    def suction_on(self):
+        suction = Bool()
+        suction.data = True
+        self.pub_suction.publish(suction)
+
+    def suction_off(self):
+        suction = Bool()
+        suction.data = False
+        self.pub_suction.publish(suction)
 
     def timer_callback_odom(self):
 
@@ -74,9 +163,9 @@ class OdometryNode(Node):
         
         #vl = self.left_speed/100.0
         #vr = self.right_speed/100.0
-        if (np.abs(self.Accelx) < 0.2):
+        if (np.abs(self.Accelx) < 0.0):
             self.Accelx = 0.0
-        if (np.abs(self.Accely) < 0.13):
+        if (np.abs(self.Accely) < 0.0):
             self.Accely = 0.0
         self.vx += self.Accelx*dt
         self.vy += self.Accely*dt
@@ -154,8 +243,40 @@ def main(args=None):
     rclpy.init(args=args)
 
     odom_node = OdometryNode()
+    
+    ## box grab routine
+    box_pos_y = 0.75
+    box_pos_z = 0.75
+    thetas = ik_boat(box_pos_y, box_pos_z)
+    print("Sending goal")
+    odom_node.move_arm(thetas)
+    print("done goal")
 
-    rclpy.spin(odom_node)
+    odom_node.suction_on()
+    odom_node.change_left_angle(1.571)
+    odom_node.change_left_thrust(20)
+    thetas[1] += 0.1
+    odom_node.move_arm(thetas)
+    time.sleep(2)
+    odom_node.change_left_thrust(-20)
+    time.sleep(1.5)
+    odom_node.change_left_thrust(0)
+    odom_node.change_left_angle(0.0)
+    
+    # hopefully we are headed straight enough and we make the journey
+    print("driving to target")
+    odom_node.change_both_thrust(20)
+    time.sleep(40.5)
+    odom_node.change_both_thrust(20)
+    print("coasting")
+    time.sleep(30.5)
+    odom_node.change_left_angle(1.571)
+    odom_node.change_left_thrust(20)
+    time.sleep(5.0)
+    odom_node.change_both_thrust(0)
+    odom_node.suction_off()
+
+    #rclpy.spin(odom_node)
     odom_node.file_object_results.close()
     odom_node.destroy_node()
     rclpy.shutdown()
